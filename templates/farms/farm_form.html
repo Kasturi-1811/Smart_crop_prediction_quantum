@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Add Farm{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>{{ title|default:"Add a Farm" }}</h1>
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+
+        <button type="submit">Save Farm</button>
+        <a href="{% url 'farm_list' %}">Cancel</a>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,84 @@
+
+{% extends "base.html" %}
+
+{% block title %}Yield Prediction{% endblock %}
+
+{% block content %}
+<h1>Crop Yield Prediction</h1>
+
+<form method="post">
+    {% csrf_token %}
+
+    <label>Farm
+        <select name="farm_id">
+            <option value="">Select farm (optional)</option>
+            {% for farm in farms %}
+                <option value="{{ farm.id }}">{{ farm.farm_name }}</option>
+            {% endfor %}
+        </select>
+    </label>
+
+    <label>Crop
+        <input name="crop" placeholder="e.g. Rice" required>
+    </label>
+
+    <label>Season
+        <select name="season" required>
+            <option value="">Choose season</option>
+            <option value="Kharif">Kharif</option>
+            <option value="Rabi">Rabi</option>
+            <option value="Whole Year">Whole Year</option>
+            <option value="Summer">Summer</option>
+        </select>
+    </label>
+
+    <label>State
+        <input name="state" value="Andhra Pradesh" required>
+    </label>
+
+    <label>Crop year
+        <input name="year" type="number" value="2026"
+               min="1997" max="2030" required>
+    </label>
+
+    <label>Farm area (dataset area units)
+        <input name="area" type="number" min="0.01"
+               step="any" required>
+    </label>
+
+    <label>Annual rainfall (mm)
+        <input name="rainfall" type="number" min="0"
+               step="any" required>
+    </label>
+
+    <button type="submit">Estimate Yield</button>
+</form>
+
+{% if error %}
+    <p>{{ error }}</p>
+{% endif %}
+
+
+{% if error %}
+    <p>{{ error }}</p>
+{% endif %}
+
+{% if result %}
+    <h2>Yield Prediction Results</h2>
+    <p>Crop: {{ result.crop }}</p>
+
+    <h3>Classical ML</h3>
+    <p>{{ result.classical_name }}</p>
+    <p>Estimated yield: {{ result.classical_yield }}</p>
+
+    <h3>Quantum ML</h3>
+    <p>{{ result.quantum_name }}</p>
+    <p>Estimated yield: {{ result.quantum_yield }}</p>
+
+    <p>
+        These are experimental estimates, not guaranteed harvest yields.
+        The quantum model has not been proven more accurate.
+    </p>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,1 @@
+{% extends "base.html" %}{% block title %}Profile{% endblock %}{% block content %}<h1>Farmer Profile</h1><p>Username: {{ user.username }}</p><p>Email: {{ user.email|default:"Not provided" }}</p><form method="post">{% csrf_token %}{{ form.as_p }}<button type="submit">Save Profile</button></form>{% endblock %}

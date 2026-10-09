@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<section class="dashboard">
+    <div class="dashboard-header">
+        <span class="eyebrow">Dashboard</span>
+        <h1>Farmer Dashboard</h1>
+        <p>Welcome{% if user.first_name %}, {{ user.first_name }}{% endif %}. 👋</p>
+    </div>
+
+    <div class="action-grid">
+        <a class="action-card" href="{% url 'farm_add' %}">
+            <span class="feature-icon">🚜</span>
+            <strong>Add Farm</strong>
+        </a>
+        <a class="action-card" href="{% url 'soil_photo_analysis' %}">
+    <span class="feature-icon">📸</span>
+    <strong>Soil Photo Analysis</strong>
+</a>
+        <a class="action-card" href="{% url 'soil_analysis' %}">
+            <span class="feature-icon">🧪</span>
+            <strong>Soil Analysis</strong>
+        </a>
+        <a class="action-card" href="{% url 'crop_recommendation' %}">
+            <span class="feature-icon">🌾</span>
+            <strong>Crop Recommendation</strong>
+        </a>
+        <a class="action-card" href="{% url 'yield_prediction' %}">
+            <span class="feature-icon">⚛️</span>
+            <strong>Yield Prediction</strong>
+        </a>
+    </div>
+
+    <div class="dashboard-columns">
+        <div class="list-card">
+            <h2>My Farms</h2>
+            {% if farms %}
+                <ul>
+                    {% for farm in farms %}
+                        <li>
+                            <span>{{ farm.farm_name }}</span>
+                            <span class="status">{{ farm.area_acres }} acres</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="empty">No farms yet. <a href="{% url 'farm_add' %}">Add your first farm</a>.</p>
+            {% endif %}
+        </div>
+
+        <div class="list-card">
+            <h2>Recent Predictions</h2>
+            
+{% if recent_predictions %}
+    <ul>
+        {% for prediction in recent_predictions %}
+            <li>
+                <div>
+                    <strong>{{ prediction.crop }} — {{ prediction.season }}</strong>
+                    <p>Year: {{ prediction.crop_year }}</p>
+                    <p>Classical: {{ prediction.classical_yield|floatformat:2 }}</p>
+                    <p>Quantum: {{ prediction.quantum_yield|floatformat:2 }}</p>
+                    <small>{{ prediction.created_at|date:"d M Y, H:i" }}</small>
+                </div>
+            </li>
+        {% endfor %}
+    </ul>
+    <a href="{% url 'prediction_history' %}">View all predictions →</a>
+{% else %}
+    <p class="empty">No saved predictions yet. Make your first yield prediction!</p>
+{% endif %}
+
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,205 @@
+
+{% extends "base.html" %}
+{% block title %}Crop Health Analysis{% endblock %}
+
+{% block content %}
+<section class="soil-page">
+    <div class="soil-heading">
+        <span class="eyebrow">QUANTUMCROP · CROP HEALTH</span>
+        <h1>Crop Health Analysis</h1>
+        <p>
+            Upload a photo of your crop to check for visible symptoms
+            and receive preliminary guidance.
+        </p>
+    </div>
+
+    <div class="soil-card">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <label for="language">
+                <strong>Choose your language / మీ భాషను ఎంచుకోండి</strong>
+            </label>
+            <select id="language" name="language" required>
+                <option value="en" {% if selected_language == "en" %}selected{% endif %}>English</option>
+                <option value="te" {% if selected_language == "te" %}selected{% endif %}>తెలుగు (Telugu)</option>
+                <option value="hi" {% if selected_language == "hi" %}selected{% endif %}>हिन्दी (Hindi)</option>
+            </select>
+
+            <label for="crop_name">
+                <strong>Crop name (optional)</strong>
+            </label>
+            <input
+                type="text"
+                id="crop_name"
+                name="crop_name"
+                value="{{ crop_name }}"
+                placeholder="e.g. Rice, chilli, tomato"
+            >
+
+            <label for="crop_image">
+                <strong>Take or upload a crop photo</strong>
+            </label>
+            <input
+                type="file"
+                id="crop_image"
+                name="crop_image"
+                accept="image/jpeg,image/png,image/webp"
+                capture="environment"
+                required
+            >
+
+            <p class="soil-hint">
+                Take a clear photo of the affected leaves or plant.
+                Natural light helps make symptoms easier to see.
+            </p>
+
+            <button class="soil-primary" type="submit">
+                Analyze Crop Health
+            </button>
+        </form>
+    </div>
+
+    {% if error %}
+        <div class="soil-card soil-error">
+            <h2>Analysis unavailable</h2>
+            <p>{{ error }}</p>
+        </div>
+    {% endif %}
+
+    {% if result %}
+        <div class="soil-results">
+            <div class="soil-results-heading">
+                <div>
+                    <span class="eyebrow">YOUR REPORT</span>
+                    <h2>Crop Health Report</h2>
+                    <p class="soil-hint">
+                        Preliminary AI assessment, not a confirmed diagnosis.
+                    </p>
+                </div>
+                <div class="soil-audio-controls">
+                    <button type="button" class="soil-primary" id="speakButton">
+                        🔊 Listen
+                    </button>
+                    <button type="button" class="soil-secondary" id="stopButton">
+                        ■ Stop
+                    </button>
+                </div>
+            </div>
+
+            <div class="soil-card">
+                <div id="cropReport" class="soil-report">{{ result }}</div>
+            </div>
+        </div>
+    {% endif %}
+</section>
+
+<style>
+.soil-page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 24px 16px 48px;
+}
+.soil-heading { margin-bottom: 24px; }
+.soil-heading h1 { margin: 8px 0; }
+.soil-heading p, .soil-hint {
+    color: var(--muted, #64748b);
+    line-height: 1.6;
+}
+.soil-card {
+    background: var(--card-bg, #fff);
+    border: 1px solid var(--border-color, #e2e8f0);
+    border-radius: 16px;
+    padding: 22px;
+    margin-bottom: 18px;
+    box-shadow: 0 4px 18px rgba(15, 23, 42, .04);
+}
+.soil-card label { display: block; margin: 14px 0 8px; }
+.soil-card input, .soil-card select {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 11px;
+    border: 1px solid #cbd5e1;
+    border-radius: 9px;
+    font: inherit;
+}
+.soil-card input[type="file"] { padding: 8px; }
+.soil-primary, .soil-secondary {
+    border: 0;
+    border-radius: 10px;
+    padding: 12px 17px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+.soil-primary { background: #246b45; color: white; }
+.soil-secondary {
+    background: #eef2f0;
+    color: #1f2937;
+}
+.soil-results { margin-top: 30px; }
+.soil-results-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+.soil-audio-controls { display: flex; gap: 8px; flex-wrap: wrap; }
+.soil-report { line-height: 1.8; overflow-wrap: anywhere; }
+.soil-error { border-color: #e8b4b4; }
+@media (max-width: 560px) {
+    .soil-card { padding: 17px; }
+}
+</style>
+
+<script>
+(() => {
+    const report = document.getElementById("cropReport");
+    const speakButton = document.getElementById("speakButton");
+    const stopButton = document.getElementById("stopButton");
+
+    if (!report || !speakButton || !stopButton) return;
+
+    const cleanText = (text) => text
+        .replace(/\\\*/g, "*")
+        .replace(/\\#/g, "#")
+        .replace(/\\\+/g, "")
+        .replace(/^\s*#{1,6}\s*/gm, "")
+        .replace(/\*\*(.*?)\*\*/g, "$1")
+        .replace(/^\s*[-*]\s+/gm, "• ")
+        .replace(/\\/g, "")
+        .trim();
+
+    const spokenText = cleanText(report.innerText || report.textContent);
+    report.textContent = spokenText;
+
+    const languageCodes = {
+        en: "en-IN",
+        te: "te-IN",
+        hi: "hi-IN"
+    };
+
+    speakButton.addEventListener("click", () => {
+        if (!("speechSynthesis" in window)) {
+            alert("Audio is not supported by this browser.");
+            return;
+        }
+
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(spokenText);
+        utterance.lang =
+            languageCodes[document.getElementById("language").value] || "en-IN";
+        utterance.rate = 0.9;
+        window.speechSynthesis.speak(utterance);
+    });
+
+    stopButton.addEventListener("click", () => {
+        if ("speechSynthesis" in window) {
+            window.speechSynthesis.cancel();
+        }
+    });
+})();
+</script>
+{% endblock %}

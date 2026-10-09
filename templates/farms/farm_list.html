@@ -1,0 +1,16 @@
+<a href="{% url 'farm_create' %}">+ Add Farm</a>
+
+{% for farm in farms %}
+<div class="farm-card">
+    <h3>{{ farm.farm_name }}</h3>
+    <p>{{ farm.village }}, {{ farm.district }}</p>
+    <p>Area: {{ farm.area_acres }} acres</p>
+    <p>Soil: {{ farm.soil_type|default:"Not specified" }}</p>
+    <p>Current crop: {{ farm.current_crop|default:"Not specified" }}</p>
+
+    <a href="{% url 'farm_edit' farm.pk %}">Edit</a>
+    <a href="{% url 'farm_delete' farm.pk %}">Delete</a>
+</div>
+{% empty %}
+<p>No farms added yet. Add your first farm to get started.</p>
+{% endfor %}

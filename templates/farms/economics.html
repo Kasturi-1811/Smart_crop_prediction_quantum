@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}Farm Economics | QuantumCrop{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Farm Economics</h1>
+    <p>Estimate your farming costs, expected income and profit or loss.</p>
+
+    {% for message in messages %}
+        <p>{{ message }}</p>
+    {% endfor %}
+
+    {% if not farms %}
+        <p>You haven't added a farm yet.</p>
+        <a href="{% url 'farm_create' %}">Add your farm first</a>
+    {% else %}
+        <form method="post">
+            {% csrf_token %}
+
+            <h2>Farm details</h2>
+
+            <label for="farm_id">Select farm</label>
+            <select name="farm_id" id="farm_id" required>
+                {% for farm in farms %}
+                    <option value="{{ farm.pk }}"
+                        {% if selected_farm.pk == farm.pk %}selected{% endif %}>
+                        {{ farm.farm_name }} — {{ farm.area_acres }} acres
+                    </option>
+                {% endfor %}
+            </select>
+
+            <label for="area_acres">Area being cultivated (acres)</label>
+            <input id="area_acres" name="area_acres" type="number"
+                   min="0.01" step="0.01"
+                   value="{{ selected_farm.area_acres|default:'' }}" required>
+
+            <h2>Farming expenses (₹)</h2>
+
+            <label>Seeds
+                <input name="seed_cost" type="number" min="0" step="0.01" value="0" required>
+            </label>
+
+            <label>Fertilizers
+                <input name="fertilizer_cost" type="number" min="0" step="0.01" value="0" required>
+            </label>
+
+            <label>Labour
+                <input name="labour_cost" type="number" min="0" step="0.01" value="0" required>
+            </label>
+
+            <label>Irrigation
+                <input name="irrigation_cost" type="number" min="0" step="0.01" value="0" required>
+            </label>
+
+            <label>Pesticides
+                <input name="pesticide_cost" type="number" min="0" step="0.01" value="0" required>
+            </label>
+
+            <label>Equipment and machinery
+                <input name="equipment_cost" type="number" min="0" step="0.01" value="0" required>
+            </label>
+
+            <label>Other expenses
+                <input name="other_cost" type="number" min="0" step="0.01" value="0" required>
+            </label>
+
+            <h2>Expected crop income</h2>
+
+            <label>Expected total yield (kg)
+                <input name="expected_yield_kg" type="number"
+                       min="0" step="0.01" required>
+            </label>
+
+            <label>Expected selling price per kg (₹)
+                <input name="price_per_kg" type="number"
+                       min="0" step="0.01" required>
+            </label>
+
+            <button type="submit">Calculate and Save Estimate</button>
+        </form>
+    {% endif %}
+
+    {% if estimate %}
+        <hr>
+        <h2>Your Economics Estimate</h2>
+        <p>Farm: {{ estimate.farm.farm_name }}</p>
+        <p>Cultivated area: {{ estimate.area_acres }} acres</p>
+        <p>Total expenses: ₹{{ estimate.total_cost|floatformat:2 }}</p>
+        <p>Expected revenue: ₹{{ estimate.revenue|floatformat:2 }}</p>
+
+        {% if estimate.profit >= 0 %}
+            <h3>Estimated profit: ₹{{ estimate.profit|floatformat:2 }}</h3>
+        {% else %}
+            <h3>Estimated loss: ₹{{ estimate.profit|stringformat:".2f"|cut:"-" }}</h3>
+        {% endif %}
+
+        <p>Profit/loss per acre:
+            ₹{{ estimate.profit_per_acre|floatformat:2 }}
+        </p>
+
+        <p><small>This is an estimate based on your inputs, not a guaranteed return.</small></p>
+    {% endif %}
+
+    <p><a href="{% url 'farm_economics_history' %}">View previous estimates</a></p>
+</div>
+{% endblock %}

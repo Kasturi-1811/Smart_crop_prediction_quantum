@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Economics History | QuantumCrop{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Previous Economics Estimates</h1>
+
+    <p><a href="{% url 'farm_economics' %}">Calculate a new estimate</a></p>
+
+    {% for record in records %}
+        <div class="economics-record">
+            <h3>{{ record.farm.farm_name }}</h3>
+            <p>Date: {{ record.created_at|date:"d M Y, H:i" }}</p>
+            <p>Area: {{ record.area_acres }} acres</p>
+            <p>Total expenses: ₹{{ record.total_cost|floatformat:2 }}</p>
+            <p>Expected revenue: ₹{{ record.revenue|floatformat:2 }}</p>
+            <p>Estimated profit/loss: ₹{{ record.profit|floatformat:2 }}</p>
+        </div>
+        <hr>
+    {% empty %}
+        <p>No saved estimates yet. Calculate your first estimate to see it here.</p>
+    {% endfor %}
+</div>
+{% endblock %}

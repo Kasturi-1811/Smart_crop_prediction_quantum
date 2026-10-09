@@ -1,0 +1,148 @@
+
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h1>🌱 Smart Crop Recommendation</h1>
+    <p>
+        Find crops to investigate based on your location, season,
+        available water, and broad weather conditions.
+    </p>
+
+    {% if error %}
+        <p role="alert">{{ error }}</p>
+    {% endif %}
+
+    <form method="post" id="crop-form">
+        {% csrf_token %}
+
+        <label for="location">Village / District</label>
+        <input
+            id="location"
+            name="location"
+            value="{{ form_data.location|default:'' }}"
+            placeholder="e.g. Guntur, Andhra Pradesh"
+        >
+
+        <input type="hidden" name="latitude" id="latitude">
+        <input type="hidden" name="longitude" id="longitude">
+
+        <button type="button" id="gps-button">📍 Use My GPS</button>
+        <p id="gps-message" role="status"></p>
+
+        <label for="season">Planting season</label>
+        <select id="season" name="season" required>
+            <option value="">Select season</option>
+            <option value="kharif"
+                {% if form_data.season == "kharif" %}selected{% endif %}>
+                Kharif (monsoon)
+            </option>
+            <option value="rabi"
+                {% if form_data.season == "rabi" %}selected{% endif %}>
+                Rabi (winter)
+            </option>
+            <option value="summer"
+                {% if form_data.season == "summer" %}selected{% endif %}>
+                Summer
+            </option>
+        </select>
+
+        <label for="water">Water availability</label>
+        <select id="water" name="water" required>
+            <option value="">Select water availability</option>
+            <option value="low"
+                {% if form_data.water == "low" %}selected{% endif %}>
+                Low — mostly rainfall
+            </option>
+            <option value="medium"
+                {% if form_data.water == "medium" %}selected{% endif %}>
+                Medium — some irrigation
+            </option>
+            <option value="high"
+                {% if form_data.water == "high" %}selected{% endif %}>
+                High — reliable irrigation
+            </option>
+        </select>
+
+        <label for="soil_type">Soil type (optional)</label>
+        <select id="soil_type" name="soil_type">
+            <option value="">I don't know</option>
+            <option value="sandy"
+                {% if form_data.soil_type == "sandy" %}selected{% endif %}>
+                Sandy
+            </option>
+            <option value="loam"
+                {% if form_data.soil_type == "loam" %}selected{% endif %}>
+                Loamy
+            </option>
+            <option value="clay"
+                {% if form_data.soil_type == "clay" %}selected{% endif %}>
+                Clay
+            </option>
+        </select>
+
+        <button type="submit">Recommend Crops</button>
+    </form>
+
+    {% if recommendations %}
+        <hr>
+        <h2>Recommendations for {{ location_label }}</h2>
+        <p>Current temperature: {{ temperature }} °C</p>
+        <p>Forecast rainfall over 3 days: {{ forecast_rain_mm }} mm</p>
+        {% if rain_chance != None %}
+            <p>Average daily rain probability: {{ rain_chance }}%</p>
+        {% endif %}
+
+        {% for crop in recommendations %}
+            <section>
+                <h3>{{ forloop.counter }}. {{ crop.name }}</h3>
+                <p>Rule-based suitability score: {{ crop.score }}/100</p>
+                <p>{{ crop.note }}</p>
+                <p><strong>Factors considered:</strong></p>
+                <ul>
+                    {% for reason in crop.reasons %}
+                        <li>{{ reason }}</li>
+                    {% endfor %}
+                </ul>
+            </section>
+            <hr>
+        {% endfor %}
+
+        <p>
+            These are preliminary rule-based suggestions, not verified
+            local crop predictions. Confirm local planting dates, soil
+            conditions, variety, water needs, and market suitability with
+            your agricultural extension officer before planting.
+        </p>
+    {% endif %}
+</div>
+
+<script>
+document.getElementById("gps-button").addEventListener("click", function () {
+    const message = document.getElementById("gps-message");
+
+    if (!navigator.geolocation) {
+        message.textContent = "GPS is not supported by this browser.";
+        return;
+    }
+
+    message.textContent = "Requesting location permission...";
+
+    navigator.geolocation.getCurrentPosition(
+        function (position) {
+            document.getElementById("latitude").value =
+                position.coords.latitude;
+            document.getElementById("longitude").value =
+                position.coords.longitude;
+            document.getElementById("location").value = "";
+            message.textContent = "Location found. Submit the form to continue.";
+        },
+        function () {
+            message.textContent =
+                "GPS unavailable. Enter your village or district instead.";
+        },
+        { timeout: 10000 }
+    );
+});
+</script>
+{% endblock %}

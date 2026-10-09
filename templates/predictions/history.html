@@ -1,0 +1,27 @@
+
+{% extends "base.html" %}
+
+{% block title %}Prediction History{% endblock %}
+
+{% block content %}
+<h1>My Prediction History</h1>
+
+{% if predictions %}
+    {% for item in predictions %}
+        <article>
+            <h3>{{ item.crop }} — {{ item.season }}</h3>
+            <p>State: {{ item.state }}</p>
+            <p>Year: {{ item.crop_year }}</p>
+            <p>Area: {{ item.area }}</p>
+            <p>Annual rainfall: {{ item.annual_rainfall }} mm</p>
+            <p>Classical estimate: {{ item.classical_yield }}</p>
+            <p>Quantum estimate: {{ item.quantum_yield }}</p>
+            <p>Saved: {{ item.created_at|date:"d M Y, H:i" }}</p>
+        </article>
+        <hr>
+    {% endfor %}
+{% else %}
+    <p>You have not made any predictions yet.</p>
+{% endif %}
+
+{% endblock %}

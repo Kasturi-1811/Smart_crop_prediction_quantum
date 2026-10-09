@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Home | QuantumCrop{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <span class="eyebrow">Smart Agriculture · Quantum ML Research</span>
+    <h1>Grow Smarter. Harvest Better.</h1>
+    <p class="hero-text">Explore soil analysis, crop recommendations, yield estimation, and farm planning in one place.</p>
+    <div class="hero-actions">
+        {% if user.is_authenticated %}
+            <a class="primary-button" href="{% url 'dashboard' %}">Open Dashboard</a>
+        {% else %}
+            <a class="primary-button" href="{% url 'register' %}">Get Started</a>
+            <a class="secondary-button" href="{% url 'login' %}">Login</a>
+        {% endif %}
+    </div>
+</section>
+
+<section class="features-section" id="features">
+    <h2>Platform Features</h2>
+    <p class="section-description">Everything you need to plan a season, from soil to returns.</p>
+
+    <div class="feature-grid">
+        <article class="feature-card">
+            <div class="feature-icon">🚜</div>
+            <h3>Farm Management</h3>
+            <p>Manage multiple farms.</p>
+            <span class="status">Available</span>
+        </article>
+        <article class="feature-card">
+            <div class="feature-icon">🧪</div>
+            <h3>Soil Analysis</h3>
+            <p>Enter soil measurements.</p>
+            <span class="status">Available</span>
+        </article>
+        <article class="feature-card">
+            <div class="feature-icon">🌾</div>
+            <h3>Crop Recommendation</h3>
+            <p>Explore suitable crop options.</p>
+            <span class="status">Available</span>
+        </article>
+        <article class="feature-card">
+            <div class="feature-icon">⚛️</div>
+            <h3>Yield Prediction</h3>
+            <p>Compare classical and quantum ML research models.</p>
+            <span class="status">Prototype</span>
+        </article>
+        <article class="feature-card">
+            <div class="feature-icon">🍃</div>
+            <h3>Crop Health</h3>
+            <p>Upload a plant image for planned analysis.</p>
+            <span class="status">Planned</span>
+        </article>
+        <article class="feature-card">
+            <div class="feature-icon">💰</div>
+            <h3>Farm Economics</h3>
+            <p>Estimate cultivation cost and possible returns.</p>
+            <span class="status">Planned</span>
+        </article>
+    </div>
+
+    <p class="section-description" style="margin-top:36px;">
+        Features requiring models or external data will remain prototype/planned until integrated.
+    </p>
+</section>
+
+<section class="about-section" id="about">
+    <h2>About</h2>
+    <p>This project explores classical and quantum machine learning for smart agriculture.</p>
+</section>
+{% endblock %}

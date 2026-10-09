@@ -1,0 +1,110 @@
+
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h1>🌦️ Live Weather & Farm Advisory</h1>
+    <p>Get current weather and a three-day forecast for your location.</p>
+
+    <form method="get" id="weather-form">
+        <label for="location">Village / District</label>
+        <input
+            type="text"
+            id="location"
+            name="location"
+            value="{{ location }}"
+            placeholder="e.g. Guntur, Andhra Pradesh"
+        >
+        <input type="hidden" name="latitude" id="latitude">
+        <input type="hidden" name="longitude" id="longitude">
+
+        <button type="submit">Check Weather</button>
+        <button type="button" id="gps-button">📍 Use My GPS</button>
+        <p id="gps-message" role="status"></p>
+    </form>
+
+    {% if error %}
+        <p role="alert">{{ error }}</p>
+    {% endif %}
+
+    {% if weather %}
+        <hr>
+        <h2>{{ location }}</h2>
+
+        <section>
+            <h2>{{ weather.icon }} {{ weather.description }}</h2>
+            <p>Temperature: <strong>{{ weather.temperature }} °C</strong></p>
+            <p>Feels like: {{ weather.feels_like }} °C</p>
+            <p>Humidity: {{ weather.humidity }}%</p>
+            <p>Cloud cover: {{ weather.cloud_cover }}%</p>
+            <p>Rainfall now: {{ weather.rain }} mm</p>
+            <p>Precipitation now: {{ weather.precipitation }} mm</p>
+            <p>Wind: {{ weather.wind }} km/h</p>
+            <p>Wind direction: {{ weather.wind_direction }}°</p>
+            <p>Data time: {{ weather.updated_at }}</p>
+            <p>
+                {% if weather.is_day %}
+                    ☀️ It is daytime at this location.
+                {% else %}
+                    🌙 It is nighttime at this location.
+                {% endif %}
+            </p>
+        </section>
+
+        <hr>
+        <h2>🌱 Should you plant today?</h2>
+        <h3>{{ weather.planting_status }}</h3>
+        <p>{{ weather.planting_reason }}</p>
+        <p>
+            This is preliminary weather guidance, not a crop-specific decision.
+            Soil moisture, crop type, season, and local farming advice matter too.
+        </p>
+
+        <hr>
+        <h2>📅 Three-Day Forecast</h2>
+
+        {% for day in weather.days %}
+            <section>
+                <h3>{{ day.icon }} {{ day.date }} — {{ day.description }}</h3>
+                <p>Temperature: {{ day.min_temp }}–{{ day.max_temp }} °C</p>
+                <p>Chance of rain: {{ day.rain_chance }}%</p>
+                <p>Expected rainfall: {{ day.rain_total }} mm</p>
+                <p>Sunrise: {{ day.sunrise }}</p>
+                <p>Sunset: {{ day.sunset }}</p>
+                <p>Expected sunshine: {{ day.sunshine_hours }} hours</p>
+            </section>
+            <hr>
+        {% endfor %}
+    {% endif %}
+</div>
+
+<script>
+document.getElementById("gps-button").addEventListener("click", function () {
+    const message = document.getElementById("gps-message");
+
+    if (!navigator.geolocation) {
+        message.textContent = "Your browser does not support GPS location.";
+        return;
+    }
+
+    message.textContent = "Requesting location permission...";
+
+    navigator.geolocation.getCurrentPosition(
+        function (position) {
+            document.getElementById("latitude").value =
+                position.coords.latitude;
+            document.getElementById("longitude").value =
+                position.coords.longitude;
+            document.getElementById("location").value = "";
+            message.textContent = "Location found. Loading weather...";
+            document.getElementById("weather-form").submit();
+        },
+        function () {
+            message.textContent =
+                "GPS unavailable. Allow location access or enter your village.";
+        },
+        { timeout: 10000 }
+    );
+});
+</script>
+{% endblock %}

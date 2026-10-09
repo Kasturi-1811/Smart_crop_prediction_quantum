@@ -1,0 +1,200 @@
+
+{% extends "base.html" %}
+{% block title %}Soil Photo Analysis{% endblock %}
+
+{% block content %}
+<section class="soil-page">
+    <div class="soil-heading">
+        <span class="eyebrow">QUANTUMCROP · AI ASSISTANT</span>
+        <h1>Soil Photo Analysis</h1>
+        <p>Understand what your soil photo can tell you.</p>
+    </div>
+
+    <div class="soil-card">
+        
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+<label for="language"><strong>Choose your language / మీ భాషను ఎంచుకోండి</strong></label>
+<select id="language" name="language" required>
+    <option value="en" {% if selected_language == "en" %}selected{% endif %}>English</option>
+    <option value="te" {% if selected_language == "te" %}selected{% endif %}>తెలుగు (Telugu)</option>
+    <option value="hi" {% if selected_language == "hi" %}selected{% endif %}>हिन्दी (Hindi)</option>
+</select>
+
+<label for="soil_image"><strong>Take or upload a soil photo</strong></label>
+<input
+    type="file"
+    id="soil_image"
+    name="soil_image"
+    accept="image/jpeg,image/png,image/webp"
+    capture="environment"
+    required
+>
+
+            
+            <p class="soil-hint">
+                Take a clear photo in natural light, close enough to see
+                the soil texture.
+            </p>
+            <button class="soil-primary" type="submit">
+                Analyze Soil Photo
+            </button>
+        </form>
+    </div>
+
+    {% if error %}
+        <div class="soil-card soil-error">
+            <h2>Analysis couldn't be completed</h2>
+            <p>{{ error }}</p>
+        </div>
+    {% endif %}
+
+    {% if result %}
+        <div class="soil-results">
+            <div class="soil-results-heading">
+                <div>
+                    <span class="eyebrow">YOUR REPORT</span>
+                    <h2>Soil Observations</h2>
+                    <p class="soil-hint">Preliminary visual assessment — not a soil test.</p>
+                </div>
+                <div class="soil-audio-controls">
+                    <button type="button" class="soil-primary" id="speakButton">
+                        🔊 Listen
+                    </button>
+                    <button type="button" class="soil-secondary" id="stopButton">
+                        ■ Stop
+                    </button>
+                </div>
+            </div>
+
+            <div class="soil-card">
+                <div id="soilReport" class="soil-report">{{ result }}</div>
+            </div>
+            <p class="soil-hint">
+                A photo cannot reliably measure pH or NPK nutrients.
+                Use a soil test before making fertilizer decisions.
+            </p>
+        </div>
+    {% endif %}
+</section>
+
+<style>
+.soil-page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 24px 16px 48px;
+}
+.soil-heading { margin-bottom: 24px; }
+.soil-heading h1 { margin: 8px 0; }
+.soil-heading p, .soil-hint { color: var(--muted, #64748b); line-height: 1.6; }
+.soil-card {
+    background: var(--card-bg, #fff);
+    border: 1px solid var(--border-color, #e2e8f0);
+    border-radius: 16px;
+    padding: 22px;
+    margin-bottom: 18px;
+    box-shadow: 0 4px 18px rgba(15, 23, 42, .04);
+}
+.soil-card form label { display: block; margin-bottom: 12px; }
+.soil-card input[type="file"] {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    margin: 12px 0;
+}
+.soil-primary, .soil-secondary {
+    border: 0;
+    border-radius: 10px;
+    padding: 12px 17px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+.soil-primary { background: #246b45; color: white; }
+.soil-secondary {
+    background: var(--surface-secondary, #eef2f0);
+    color: var(--text-color, #1f2937);
+}
+.soil-results { margin-top: 30px; }
+.soil-results-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+.soil-results-heading h2 { margin: 7px 0; }
+.soil-audio-controls { display: flex; gap: 8px; flex-wrap: wrap; }
+.soil-report { line-height: 1.8; overflow-wrap: anywhere; }
+.soil-report h3 { margin: 22px 0 8px; color: #246b45; }
+.soil-report ul { padding-left: 24px; }
+.soil-report li { margin: 7px 0; }
+.soil-error { border-color: #e8b4b4; }
+@media (max-width: 560px) {
+    .soil-card { padding: 17px; }
+    .soil-results-heading { align-items: flex-start; }
+}
+</style>
+
+<script>
+(() => {
+    const report = document.getElementById("soilReport");
+    const speakButton = document.getElementById("speakButton");
+    const stopButton = document.getElementById("stopButton");
+
+    if (!report || !speakButton || !stopButton) return;
+
+    // Convert common Markdown markers from the AI response into readable text.
+    const cleanText = (text) => text
+        .replace(/\\\*/g, "*")
+        .replace(/\\#/g, "#")
+        .replace(/\\+/g, "")
+        .replace(/^\\s*#{1,6}\\s*/gm, "")
+        .replace(/\\*\\*(.*?)\\*\\*/g, "$1")
+        .replace(/\\*(.*?)\\*/g, "$1")
+        .replace(/^\\s*[-*]\\s+/gm, "• ")
+        .replace(/\\\\/g, "")
+        .trim();
+
+    const spokenText = cleanText(report.innerText || report.textContent);
+
+    // Present the AI's text cleanly, without displaying Markdown symbols.
+    report.textContent = spokenText;
+
+    speakButton.addEventListener("click", () => {
+        if (!("speechSynthesis" in window)) {
+            alert("Audio reading is not supported by this browser.");
+            return;
+        }
+
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(spokenText);
+        const voiceLanguages = {
+    en: "en-IN",
+    te: "te-IN",
+    hi: "hi-IN"
+};
+
+utterance.lang = voiceLanguages[
+    document.getElementById("language")?.value || "en"
+];
+        utterance.rate = 0.9;
+        window.speechSynthesis.speak(utterance);
+    });
+
+    stopButton.addEventListener("click", () => {
+        if ("speechSynthesis" in window) {
+            window.speechSynthesis.cancel();
+        }
+    });
+
+    window.addEventListener("beforeunload", () => {
+        if ("speechSynthesis" in window) {
+            window.speechSynthesis.cancel();
+        }
+    });
+})();
+</script>
+{% endblock %}
